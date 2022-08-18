@@ -1,0 +1,28 @@
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      - echo PreBuild Started ...
+      - aws --version
+      - docker --version
+      - aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 274201610284.dkr.ecr.ap-south-1.amazonaws.com
+  build:
+    commands:
+      - echo Build started on `date`
+      - echo Building java
+      - mvn clean package
+      - echo Building the docker image
+      - docker build -t 839866-pension-detail-service .
+      - docker tag 839866-pension-detail-service:latest 274201610284.dkr.ecr.ap-south-1.amazonaws.com/839866-pension-detail-service:latest
+
+  post_build:
+    commands:
+      - echo Build completed on `date`
+      - docker push 274201610284.dkr.ecr.ap-south-1.amazonaws.com/839866-pension-detail-service:latest
+      - echo Writing definition files
+      - printf '[{"name":"839866-pension-detail-service","imageUri":"%s"}]'  274201610284.dkr.ecr.ap-south-1.amazonaws.com/839866-pension-detail-service:latest > imageDefinition.json
+
+artifacts:
+  files: 
+    - imageDefinition.json
